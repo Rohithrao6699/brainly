@@ -2,16 +2,19 @@ import PlusIcon from "../icons/plus";
 import ShareIcon from "../icons/share";
 import Button from "../ui/Button";
 import Card from "../ui/Card";
-import { useRecoilValue } from "recoil";
-import { contentAtom } from "../recoil/Atoms";
+import { useRecoilState, useSetRecoilState } from "recoil";
+import {
+  addContentOpenAtom,
+  contentAtom,
+  shareOpenAtom,
+} from "../recoil/Atoms";
+import { useEffect } from "react";
+import { getContent } from "../api/api";
 
-interface contentProps {
-  onShareclose: () => void;
-  onAddclose: () => void;
-}
-
-export function Content({ onShareclose, onAddclose }: contentProps) {
-  const contents = useRecoilValue(contentAtom);
+export function Content() {
+  const [contents, setContents] = useRecoilState(contentAtom);
+  const setShareOpen = useSetRecoilState(shareOpenAtom);
+  const setAddOpen = useSetRecoilState(addContentOpenAtom);
 
   function getEmbedUrl(youtubeUrl: string): string {
     const url = new URL(youtubeUrl);
@@ -19,13 +22,26 @@ export function Content({ onShareclose, onAddclose }: contentProps) {
     return `https://www.youtube.com/embed/${videoId}`;
   }
 
+  async function fetchDocuments() {
+    const token = localStorage.getItem("token");
+    if (token) {
+      const data = await getContent(token);
+      if (data.success) {
+        setContents(data.content);
+      }
+    }
+  }
+  useEffect(() => {
+    fetchDocuments();
+  }, []);
+
   return (
     <>
       <div className="h-screen bg-[#F9FBFC] flex flex-col gap-10 w-full">
         <div className="flex flex-row justify-between items-center py-6 px-4">
           <h1 className="font-bold text-2xl">All Notes</h1>
           <div className="flex flex-row justify-end items-center gap-4 py-2">
-            <div onClick={onShareclose}>
+            <div onClick={() => setShareOpen(true)}>
               <Button
                 variant="primary"
                 size="md"
@@ -34,7 +50,7 @@ export function Content({ onShareclose, onAddclose }: contentProps) {
                 icon={<ShareIcon size="md" />}
               />
             </div>
-            <div onClick={onAddclose}>
+            <div onClick={() => setAddOpen(true)}>
               <Button
                 variant="secondary"
                 size="md"
@@ -47,16 +63,17 @@ export function Content({ onShareclose, onAddclose }: contentProps) {
         </div>
 
         <div className="flex flex-wrap items-start justify-start gap-2 overflow-auto px-4">
-          {contents.map(({ title, link, type }, index) =>
+          {contents.map(({ title, link, type, _id }) =>
             type === "video" ? (
               <Card
-                key={index}
+                key={_id}
+                id={_id}
                 title={title}
                 body={getEmbedUrl(link)}
                 type={type}
               />
             ) : (
-              <Card key={index} title={title} body={link} type={type} />
+              <Card key={_id} id={_id} title={title} body={link} type={type} />
             )
           )}
         </div>

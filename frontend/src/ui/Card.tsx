@@ -1,16 +1,19 @@
 // import { JSX } from "react";
-import { useRecoilValue } from "recoil";
+import { useSetRecoilState } from "recoil";
+import { toast } from "react-hot-toast";
 import { DeleteIcon } from "../icons/delete";
 import { LinkIcon } from "../icons/link";
 import ShareIcon from "../icons/share";
 import { TwitterIcon } from "../icons/twitter";
 import { VideoIcon } from "../icons/video";
 import { contentAtom } from "../recoil/Atoms";
+import { handleDelete } from "../api/api";
 
 interface CardProps {
+  id: string;
   title: string;
   type: string;
-  body?: string;
+  body: string;
   tags?: string;
 }
 
@@ -18,7 +21,32 @@ const defaultStyles: string =
   "flex flex-col justify-between gap-2 p-2 py-4 bg-white w-80 min-h-40 rounded-lg border border-slate-200";
 
 function Card(props: CardProps) {
-  const contentsValue = useRecoilValue(contentAtom);
+  const setContentsValue = useSetRecoilState(contentAtom);
+
+  async function handledelete(id: string) {
+    const token = localStorage.getItem("token");
+    if (token) {
+      const data = await handleDelete(id, token);
+      if (data.success) {
+        console.log(`data deleted ${data.deletedContent}`);
+        setContentsValue((prev) =>
+          prev.filter((content) => content._id !== id)
+        );
+      }
+    }
+  }
+
+  function shareLink(link: string) {
+    if (!link) {
+      toast.error("unbale to copy link!");
+      return;
+    }
+
+    navigator.clipboard
+      .writeText(link)
+      .then(() => toast.success("link copied to clipboard, share with anyone!"))
+      .catch(() => toast.error("failed to copy"));
+  }
 
   return (
     <>
@@ -43,10 +71,10 @@ function Card(props: CardProps) {
             <p className="text-black font-semibold">{props.title}</p>
           </div>
           <div className="flex flex-row items-center gap-4 text-[#A6A8AA]">
-            <div onClick={() => console.log(contentsValue)}>
+            <div onClick={() => shareLink(props.body)}>
               <ShareIcon size="md" />
             </div>
-            <div onClick={() => handleDelete(props)}>
+            <div onClick={() => handledelete(props.id)}>
               <DeleteIcon size="md" />
             </div>
           </div>

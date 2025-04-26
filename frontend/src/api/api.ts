@@ -40,3 +40,22 @@ export async function setContent(body: postContentInterface, token: string) {
   const data = res.data;
   return data;
 }
+
+export async function handleDelete(id: string, token: string) {
+  const res = await axios.delete(`${Base_Url}/content?contentId=${id}`, {
+    headers: {
+      Authorization: token,
+    },
+  });
+  const data = res.data;
+  return data;
+}
+
+export async function shareBrain(share: {}, token: string) {
+  const res = await axios.post(`${Base_Url}/content/sharebrain`, share, {
+    headers: { Authorization: token },
+  });
+  //returns { success: true, hashedLink: hashedLink.hash }
+  const data = res.data;
+  return data;
+}

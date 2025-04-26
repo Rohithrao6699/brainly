@@ -205,6 +205,7 @@ router.delete("/content", auth, async (req, res, next) => {
 router.post("/content/sharebrain", auth, async (req, res, next) => {
   const userId = req.userId;
   const share = req.body.share;
+  console.log(`share: ${share}`);
 
   if (share) {
     if (userId) {
@@ -223,7 +224,7 @@ router.post("/content/sharebrain", auth, async (req, res, next) => {
   } else {
     try {
       const deletedLink = await linkModel.deleteOne({ _id: userId });
-      res.status(200).json({ success: true, deletedLink });
+      res.status(200).json({ success: false, deletedLink });
     } catch (error) {
       next(error);
     }
